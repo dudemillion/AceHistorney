@@ -1,3 +1,4 @@
+// Variables
 const text1 = document.getElementById("para1");
 const text2 = document.getElementById("para2");
 const text3 = document.getElementById("para3");
@@ -25,14 +26,14 @@ let currentIndex = 0;
 let typingTimeout;
 let soundEnabled = true;
 
+// Text typing sound
 function playBlip() {
     if (!soundEnabled) return;
 
-    // restart sound quickly for repeated letters
     blip.currentTime = 0;
     blip.play().catch(() => {});
 }
-
+// Delays the typing if any punctuation is found
 function getDelay(char, baseSpeed) {
     if (char === "." || char === "!" || char === "?") {
         return baseSpeed + 220;
@@ -51,7 +52,7 @@ function getDelay(char, baseSpeed) {
     }
     return baseSpeed;
 }
-
+// Typing
 function typeText(textbox, text, speed = 35) {
     clearTimeout(typingTimeout);
 
@@ -86,13 +87,15 @@ function typeText(textbox, text, speed = 35) {
 
     typeNextChar();
 }
+// If the user clicks to skip the typing
 function finishTyping() {
     clearTimeout(typingTimeout);
     text1.textContent = fullText;
     typing = false;
 }
+// Main function for story loop, takes 3 texts, 3 buttons texts, image, and button actions
 function setScene(p1, p2 = "", p3 = "", b1 = "", b2 = "", b3 = "", img = "", a1 = null, a2 = null, a3 = null) {
-    typeText(text1, p1, 50);
+    typeText(text1, p1, 40);
     text2.textContent = p2;
     text3.textContent = p3;
 
@@ -108,6 +111,7 @@ function setScene(p1, p2 = "", p3 = "", b1 = "", b2 = "", b3 = "", img = "", a1 
     button2.onclick = a2;
     button3.onclick = a3;
 }
+// Prevents other clicks (like on buttons) from automatically skipping the text
 document.addEventListener("click", () => {
     if (ignoreClick) {
         return;
@@ -116,10 +120,12 @@ document.addEventListener("click", () => {
         finishTyping();
     }
 });
+// Also another check for other clicks, and the start button's function.
 start.addEventListener("click", function(event) {
     event.stopPropagation();
     startTrial();
 });
+// Mute/unmute toggles for the music
 function toggleSound() { 
     if (bgm.muted) { 
         bgm.muted = false; 
@@ -130,22 +136,39 @@ function toggleSound() {
         soundButton.src = "media/nosound.png"; 
     }
 }
+// First scene, removes titlescreen and makes everything else come in.
 function startTrial() {
     document.getElementById("titlescreen").style.display = "none";
     document.body.classList.add("trial-mode");
     ignoreClick = true;
-    setScene(
-        "Boston, Massachusetts, December 1773.",
+    if (chargesRead && talkedToClient && inspectedEvidence) {
+        setScene(
+            "You feel ready for the trial. You have everything you need. Just... breathe.",
+            "You look towards the prosecutor for the case, Millennia Edgeworth. He seems... awfully calm. You feel he might have some ace up his sleeve; this might not go as well as you planned it.",
+            "You stand there, waiting for the trial to begin. It's almost time.",
+            "",
+            "Start Trial",
+            "",
+            "media/placeholder.png",
+            null,
+            begintrial,
+            null
+        )
+    } else {
+        setScene(
+        "Boston, Massachusetts, December 20th, 1773.",
         "The courtroom is filled with tension while waiting for the trial to begin.",
         "Your client, Elias Parker, stands accused of destroying British tea in what is now being called the Boston Tea Party.",
         "Read the charges",
         "Talk to your client",
         "Inspect evidence",
         "media/start.png",
-        readCharges
-        //talkToClient,
-       // inspectEvidence
-    );
+        readCharges,
+        talkToClient,
+        inspectEvidence
+        );
+    }
+    
     button1.removeAttribute("hidden");
     button2.removeAttribute("hidden");
     button3.removeAttribute("hidden");
@@ -157,18 +180,64 @@ function readCharges() {
     chargesRead = true;
     ignoreClick = true;
     setScene(
-        "You grab the folder containing the charges against your client from underneath the table.",
+        inspectedEvidence ? "You realize you probably need to look at the charges before knowing what the evidence means; you get the charges out of the folder." : "You grab the folder containing the charges against your client from underneath the table.",
         "Elias Parker is accused of participating in the destruction of British tea belonging to the East India Company.",
         "The prosecution claims that your client was seen at Griffin's Wharf on the night of the incident.",
-        "Return",
+        chargesRead && inspectedEvidence && talkedToClient ? "I'm ready." : "Return",
         "Talk to your client",
         "Inspect evidence",
         "media/charges.png",
-        startTrial
-        //talkToClient,
-        //inspectEvidence
+        startTrial,
+        talkToClient,
+        inspectEvidence
     )
     setTimeout(() => {
         ignoreClick = false;
     }, 100);
+}
+function talkToClient() {
+    talkedToClient = true;
+    ignoreClick = true;
+    setScene(
+        "You get up from your desk and move towards Elias. You hope to gather as much information he will give you, as even the smallest pieces of evidence could count.",
+        "You approach Elias and ask him: 'Is there anything more I should know before the trial starts?'",
+        "Elias immediately tells you 'I'm gonna be honest, I was at the harbor, but I did not touch the tea! They're lying!' ... You can't help but feel he was at the wrong place at the wrong time.",
+        "Read Charges",
+        chargesRead && inspectedEvidence && talkedToClient ? "I'm ready." : "Return",
+        "Inspect Evidence",
+        "media/placeholder.png",
+        readCharges,
+        startTrial,
+        inspectEvidence
+    )
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+function inspectEvidence() {
+    inspectedEvidence = true;
+    ignoreClick = true;
+    setScene(
+        chargesRead ? "You open your folder once again and dig deeper to find the evidence collected from the scene of the crime. Knowing the charges, you can start making connections." : "You open your folder and look inside, there being the charges and the evidence. You go straight for the evidence, this is crucial to know before the charges right?",
+        "Inside the folder, you find a plastic bag, containing a few teabags. These were collected from one of the crates which were opened and thrown into the harbor.",
+        "You also find a casette tape. This is the security footage on the night of the incident. You feel uneasy, you don't think you saw him in the tape, but just one glimpse of his face even touching a crate would most definitely lose you this case.",
+        "Read Charges",
+        "Talk to client",
+        chargesRead && inspectedEvidence && talkedToClient ? "I'm ready." : "Return",
+        "media/placeholder.png",
+        readCharges,
+        talkToClient,
+        startTrial
+    )
+    setTimeout(() => {
+       ignoreClick = false; 
+    }, 100);
+}
+function begintrial() {
+    ignoreClick = true;
+    setScene(
+        "'Order! Order in the court!'",
+        "*It's time for the case.* *Who knows what will happen to Elias if he's found guilty...* *The British Crown is not merciful.*",
+        "The murmur of the jury dies down, as the judge prepares to state the case."
+    )
 }
