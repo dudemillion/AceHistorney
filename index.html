@@ -8,14 +8,27 @@
     <script src="script.js" defer></script>
 </head>
 <body>
-    <h1>Ace Historney</h1>
-    <h5>Dive into the perspective of a defense attorney handling quite the OLD case...</h5>    
+    <img src="media/nosound.png" id="sound" onclick="toggleSound()">
+    <audio id="bgm" src="audio/lobby.weba" loop muted></audio>
+    <div id="titlescreen">
+        <h1>Ace Historney</h1>
+        <h5>Dive into the perspective of a defense attorney handling quite the OLD case...</h5>    
+        <p id="credit">All music and characters accredited to Ace Attorney by Capcom.</p>
+        <button id="start">Enter the Courtroom</button>
+        <div id="defglow"></div>
+        <div id="prosglow"></div>
+        <img id="defense" src="media/Attorney.gif">
+        <img id="prosecutor" src="media/Prosecutor.gif">
+    </div>
     <p id="para1"></p>
+    <img id="visual">
     <p id="para2"></p>
     <p id="para3"></p>
-    <button id="but1"></button>
-    <button id="but2"></button>
-    <button id="but3"></button>
-    <img id="visual">
+    <div id="buttons">
+        <button id="but1" hidden></button>
+        <button id="but2" hidden></button>
+        <button id="but3" hidden></button>
+    </div>
+    
 </body>
 </html>

@@ -1,11 +1,182 @@
 @font-face {
-  font-family: "AceFont"; 
-  src: url("Font.otf") format("opentype"); 
-  font-weight: normal; 
-  font-style: normal; 
-  font-display: swap; 
+  font-family: "AceFont";
+  src: url("Font.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
 }
-* {
+
+body {
     font-family: "AceFont";
     text-align: center;
+    background: linear-gradient(
+        to right,
+        rgba(120,170,255,0.25),
+        rgb(222, 239, 255) 40%,
+        rgb(250, 219, 219) 60%,
+        rgba(255,120,120,0.25)
+    );
+    transition: background-color 1.5s ease;
+}
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(
+        circle,
+        transparent 60%,
+        rgba(0,0,0,0.15)
+    );
+    pointer-events: none;
+}
+body::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 3px;
+    background: rgba(0,0,0,0.25);
+}
+h1, h5, button, #credit {
+    animation: titleDrop 1s ease-out;
+}
+h1 {
+    font-size: 400%;
+    margin-top: 20px;
+    margin-bottom: 0px;
+}
+h5 {
+    font-size: 120%;
+    margin-top: 0px;
+    margin-bottom: 20px;
+}
+@keyframes titleDrop {
+    from {
+        transform: translateY(-60px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+#defense {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    height: 80%;
+    transform: translateY(350px);
+    animation: slideIn 1s forwards;
+    filter: drop-shadow(0px -10px 15px rgba(0,0,0,0.25));
+}
+
+#prosecutor {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    height: 80%;
+    transform: translateY(350px);
+    animation: slideIn 1s forwards;
+    filter: drop-shadow(0px -10px 15px rgba(0,0,0,0.25));
+}
+#defglow {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 50vw;
+    height: 100vh;
+    pointer-events: none;
+    background: radial-gradient(circle at bottom left,
+        rgba(120,170,255,0.5),
+        transparent 65%);
+    animation: pulseBlue 3s infinite ease-in-out;
+}
+
+#prosglow {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    width: 50vw;
+    height: 100vh;
+    pointer-events: none;
+    background: radial-gradient(circle at bottom right,
+        rgba(255,120,120,0.5),
+        transparent 65%);
+    animation: pulseRed 3s infinite ease-in-out;
+}
+button {
+    font-family: "AceFont";
+    font-size: 26px;
+    padding: 14px 40px;
+    border: 3px solid black;
+    background: white;
+    cursor: pointer;
+    transition: transform 0.15s, background 0.2s, color 0.2s;
+    margin-top: 25px;
+}
+
+button:hover {
+    background: black;
+    color: white;
+    transform: scale(1.08);
+}
+#buttons button {
+    font-size: 1rem;
+    padding: 18px 28px;
+    min-width: 260px;
+}
+p {
+    font-size: 20px;
+    max-width: 30%;
+    margin: 20px auto;
+    line-height: 1.5;
+    text-align: center;
+    color: #ffffff;
+}
+#credit {
+    font-size: 8px;
+    margin-top: 10px;
+    margin-bottom: 0px;
+    color: #555;
+    
+}
+#visual {
+    max-width: 500px;
+    height: auto;
+    margin-top: 20px;
+}
+#sound {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+}
+body.trial-mode {
+    background: rgb(87, 67, 31) !important;
+}
+body.trial-mode::before,
+body.trial-mode::after {
+    display: none;
+}
+@keyframes pulseBlue {
+    0%   { opacity: 0.35; }
+    50%  { opacity: 0.65; }
+    100% { opacity: 0.35; }
+}
+
+@keyframes pulseRed {
+    0%   { opacity: 0.35; }
+    50%  { opacity: 0.65; }
+    100% { opacity: 0.35; }
+}
+@keyframes slideIn {
+    from {
+        transform: translateY(350px);
+    }
+    to {
+        transform: translateY(0);
+    }
 }
