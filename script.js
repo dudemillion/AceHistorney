@@ -14,6 +14,8 @@ let talkedToClient = false;
 let inspectedEvidence = false;
 let evidence = [];
 let ignoreClick = false;
+let argued = false;
+let reputation = 3
 
 bgm.volume = 0.05;
 
@@ -61,47 +63,47 @@ function typeText(textbox, text, speed = 35) {
     textbox.textContent = "";
     typing = true;
 
-    function typeNextChar() {
-        if (currentIndex >= fullText.length) {
-            typing = false;
-            return;
-        }
-
-        const char = fullText[currentIndex];
-        textbox.textContent += char;
-        if (
-            char !== " " &&
-            char !== "." &&
-            char !== "," &&
-            char !== "!" &&
-            char !== "?" &&
-            char !== ";" &&
-            char !== ":" &&
-            char !== "\n"
-        ) {
-            playBlip();
-        }
-        currentIndex++;
-        typingTimeout = setTimeout(typeNextChar, getDelay(char, speed));
+function typeNextChar() {
+    if (currentIndex >= fullText.length) {
+        typing = false;
+        return;
     }
+
+    const char = fullText[currentIndex];
+    textbox.textContent += char;
+    if (
+        char !== " " &&
+        char !== "." &&
+        char !== "," &&
+        char !== "!" &&
+        char !== "?" &&
+        char !== ";" &&
+        char !== ":" &&
+        char !== "\n"
+    ) {
+        playBlip();
+    }
+    currentIndex++;
+    typingTimeout = setTimeout(typeNextChar, getDelay(char, speed));
+}
 
     typeNextChar();
 }
 // If the user clicks to skip the typing
 function finishTyping() {
     clearTimeout(typingTimeout);
-    text1.textContent = fullText;
+    text1.innerHTML = fullText;
     typing = false;
 }
 // Main function for story loop, takes 3 texts, 3 buttons texts, image, and button actions
 function setScene(p1, p2 = "", p3 = "", b1 = "", b2 = "", b3 = "", img = "", a1 = null, a2 = null, a3 = null) {
     typeText(text1, p1, 40);
-    text2.textContent = p2;
-    text3.textContent = p3;
+    text2.innerHTML = p2;
+    text3.innerHTML = p3;
 
-    button1.textContent = b1;
-    button2.textContent = b2;
-    button3.textContent = b3;
+    button1.innerHTML = b1;
+    button2.innerHTML = b2;
+    button3.innerHTML = b3;
 
     button1.hidden = !b1;
     button2.hidden = !b2;
@@ -248,13 +250,67 @@ function inspectEvidence() {
 function begintrial() {
     ignoreClick = true;
     setScene(
-        "'Order! Order in the court!'",
-        "The judge strikes his gavel. 'This court will now hear the case of the Crown versus Elias Parker.'",
-        "'The defendant stands accused of assisting in the destruction of East India Company tea during the disturbance at Griffin's Wharf.'",
+        argued ? "'I apologize, Your Honor.'" : "'Order! Order in the court!'",
+        argued ? "'Thank you.' replies the Judge, 'As I was saying,'" : "The judge strikes his gavel. The jury's murmurs die down as the judge states the case. 'This court will now hear the case of the Crown versus Elias Parker.'",
+        "'The defendant stands accused of assisting in the destruction of East India Company tea during the disturbance at Griffin's Wharf.' The prosecution may now make their opening statment.",
+        "Listen",
+        argued ? "" : "Argue",
+        "",
+        "media/placeholder.png",
+        prosecutorOpening,
+        argued ? null : argueevent
+    );
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+function argueevent() {
+    ignoreClick = true;
+    argued = true;
+    reputation = reputation - 1;
+    setScene(
+        "'OBJECTION!'",
+        "You exclaim towards the judge, apalled by your sudden and unnecessary response to the case statement.",
+        "'My client would never do that!'<br>The judge glares at you, disappointed.<br>The prosecutor says, 'Your Honor, the defense has clearly lost it's mind over this case.'<br><br>'I agree.' The judge replies, 'The defense shall not interrupt me again, lest they require a <b>Guilty</b> charge.<br><br> <i>-1 Reputation</i><br>(Try not to interrupt the Judge during important statements!)",
+        "Apologize & Continue",
+        "",
+        "",
+        "media/placeholder.png",
+        begintrial
+    )
+    setTimeout(() => {
+       ignoreClick = false; 
+    }, 100);
+}
+function prosecutorOpening() {
+    ignoreClick = true;
+    setScene(
+        "'Your Honor, the Crown will demonstrate easily that this case is not complicated in the slightest.'",
+        "<span style='color: #f54040;'>'On the night of December 16th, a mob of colonists boarded several merchant ships at Griffin's Wharf and destroyed hundreds of chests and barrels of tea belonging to the East India Company. Among those present was the defendant, Elias Parker.'</span>",
+        "<span style='color: #f54040;'>'The Crown will present testimony placing the defendant at the scene and evidence linking him directly to the destuction of British property.'<br><br>'By the end of this trial, it will be obvious the defendant is guilty.'</span>",
         "Continue",
         "",
         "",
-        "media/judge.png",
-        prosecutorOpening
-    );
+        "media/placeholder.png",
+        callwitness
+    )
+    setTimeout(() => {
+       ignoreClick = false; 
+    }, 100);
+}
+function callwitness() {
+    ignoreClick = true;
+    setScene(
+        "'The court will now hear testimony from the prosecution's witness.'",
+        "<span style='color: #f54040;'>'The prosecution calls upon Thomas Wilkes, a watchman stationed at the harbor on the night of the incident.'</span>",
+        "A nervous man steps up to the stand. He seems quite... disturbed? <br> You can't tell what's up with him, but something seems quite fishy here.",
+        "Continue",
+        "",
+        "",
+        "media/placeholder.png"
+       // witnessintroduction
+    )
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
 }
