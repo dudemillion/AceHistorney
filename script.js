@@ -103,6 +103,10 @@ function setScene(p1, p2 = "", p3 = "", b1 = "", b2 = "", b3 = "", img = "", a1 
     button2.textContent = b2;
     button3.textContent = b3;
 
+    button1.hidden = !b1;
+    button2.hidden = !b2;
+    button3.hidden = !b3;
+
     if (img) {
         visual.src = img;
     }
@@ -140,7 +144,14 @@ function toggleSound() {
 function startTrial() {
     document.getElementById("titlescreen").style.display = "none";
     document.body.classList.add("trial-mode");
+    button1.removeAttribute("hidden");
+    button2.removeAttribute("hidden");
+    button3.removeAttribute("hidden");
+    prepScene();
+}
+function prepScene() {
     ignoreClick = true;
+
     if (chargesRead && talkedToClient && inspectedEvidence) {
         setScene(
             "You feel ready for the trial. You have everything you need. Just... breathe.",
@@ -153,25 +164,22 @@ function startTrial() {
             null,
             begintrial,
             null
-        )
+        );
     } else {
         setScene(
-        "Boston, Massachusetts, December 20th, 1773.",
-        "The courtroom is filled with tension while waiting for the trial to begin.",
-        "Your client, Elias Parker, stands accused of destroying British tea in what is now being called the Boston Tea Party.",
-        "Read the charges",
-        "Talk to your client",
-        "Inspect evidence",
-        "media/start.png",
-        readCharges,
-        talkToClient,
-        inspectEvidence
+            "Boston, Massachusetts, December 20th, 1773.",
+            "The courtroom is filled with tension while waiting for the trial to begin.",
+            "Your client, Elias Parker, stands accused of destroying British tea in what is now being called the Boston Tea Party.",
+            "Read the charges",
+            "Talk to your client",
+            "Inspect evidence",
+            "media/start.png",
+            readCharges,
+            talkToClient,
+            inspectEvidence
         );
     }
-    
-    button1.removeAttribute("hidden");
-    button2.removeAttribute("hidden");
-    button3.removeAttribute("hidden");
+
     setTimeout(() => {
         ignoreClick = false;
     }, 100);
@@ -180,14 +188,14 @@ function readCharges() {
     chargesRead = true;
     ignoreClick = true;
     setScene(
-        inspectedEvidence ? "You realize you probably need to look at the charges before knowing what the evidence means; you get the charges out of the folder." : "You grab the folder containing the charges against your client from underneath the table.",
+        inspectedEvidence ? "After reviewing the evidence, you realize the charges give it proper context. You pull the charge sheet from the folder." : "You grab the folder containing the charges against your client from beneath the table.",
         "Elias Parker is accused of participating in the destruction of British tea belonging to the East India Company.",
         "The prosecution claims that your client was seen at Griffin's Wharf on the night of the incident.",
         chargesRead && inspectedEvidence && talkedToClient ? "I'm ready." : "Return",
         "Talk to your client",
         "Inspect evidence",
         "media/charges.png",
-        startTrial,
+        prepScene,
         talkToClient,
         inspectEvidence
     )
@@ -207,7 +215,7 @@ function talkToClient() {
         "Inspect Evidence",
         "media/placeholder.png",
         readCharges,
-        startTrial,
+        prepScene,
         inspectEvidence
     )
     setTimeout(() => {
@@ -217,6 +225,10 @@ function talkToClient() {
 function inspectEvidence() {
     inspectedEvidence = true;
     ignoreClick = true;
+    if (evidence.length === 0) {
+        evidence.push("teabags");
+        evidence.push("security tape");
+    }
     setScene(
         chargesRead ? "You open your folder once again and dig deeper to find the evidence collected from the scene of the crime. Knowing the charges, you can start making connections." : "You open your folder and look inside, there being the charges and the evidence. You go straight for the evidence, this is crucial to know before the charges right?",
         "Inside the folder, you find a plastic bag, containing a few teabags. These were collected from one of the crates which were opened and thrown into the harbor.",
@@ -226,8 +238,8 @@ function inspectEvidence() {
         chargesRead && inspectedEvidence && talkedToClient ? "I'm ready." : "Return",
         "media/placeholder.png",
         readCharges,
-        talkToClient,
-        startTrial
+        talkToClient,  
+        prepScene
     )
     setTimeout(() => {
        ignoreClick = false; 
@@ -237,7 +249,12 @@ function begintrial() {
     ignoreClick = true;
     setScene(
         "'Order! Order in the court!'",
-        "*It's time for the case.* *Who knows what will happen to Elias if he's found guilty...* *The British Crown is not merciful.*",
-        "The murmur of the jury dies down, as the judge prepares to state the case."
-    )
+        "The judge strikes his gavel. 'This court will now hear the case of the Crown versus Elias Parker.'",
+        "'The defendant stands accused of assisting in the destruction of East India Company tea during the disturbance at Griffin's Wharf.'",
+        "Continue",
+        "",
+        "",
+        "media/judge.png",
+        prosecutorOpening
+    );
 }
