@@ -16,6 +16,14 @@ let evidence = [];
 let ignoreClick = false;
 let argued = false;
 let reputation = 3
+let statementIndex = 0
+const objectionWrap = document.getElementById("objectionWrap");
+const testimony = [
+    "I was stationed at Griffin's Wharf that night, keeping an eye on the harbor...",
+    "Late in the evening, I witnessed a mob of people approaching the ships.",
+    "I clearly saw the defendant, Elias Parker, throwing crates of tea into the harbor!",
+    "There's no doubt in my mind about it!"
+]
 
 bgm.volume = 0.05;
 
@@ -142,6 +150,16 @@ function toggleSound() {
         soundButton.src = "media/nosound.png"; 
     }
 }
+// Effect for successful objections
+function objectionEffect() {
+    objectionWrap.classList.add("show-objection");
+    document.body.classList.add("shake");
+
+    setTimeout(() => {
+        objectionWrap.classList.remove("show-objection");
+        document.body.classList.remove("shake");
+    }, 900);
+}
 // First scene, removes titlescreen and makes everything else come in.
 function startTrial() {
     document.getElementById("titlescreen").style.display = "none";
@@ -234,7 +252,7 @@ function inspectEvidence() {
     setScene(
         chargesRead ? "You open your folder once again and dig deeper to find the evidence collected from the scene of the crime. Knowing the charges, you can start making connections." : "You open your folder and look inside, there being the charges and the evidence. You go straight for the evidence, this is crucial to know before the charges right?",
         "Inside the folder, you find a plastic bag, containing a few teabags. These were collected from one of the crates which were opened and thrown into the harbor.",
-        "You also find a casette tape. This is the security footage on the night of the incident. You feel uneasy, you don't think you saw him in the tape, but just one glimpse of his face even touching a crate would most definitely lose you this case.",
+        "You also find a casette tape. This is the security footage on the night of the incident. You vaguely remember the contents of the tape; The defendant was at the dock, and you know that for certain.",
         "Read Charges",
         "Talk to client",
         chargesRead && inspectedEvidence && talkedToClient ? "I'm ready." : "Return",
@@ -307,10 +325,119 @@ function callwitness() {
         "Continue",
         "",
         "",
-        "media/placeholder.png"
-       // witnessintroduction
+        "media/placeholder.png",
+        startTestimony
     )
     setTimeout(() => {
         ignoreClick = false;
     }, 100);
+}
+function startTestimony() {
+    statementIndex = 0;
+    showStatement();
+}
+function showStatement() {
+    ignoreClick = true;
+    setScene(
+        `"${testimony[statementIndex]}"`,
+        "",
+        "",
+        "Press",
+        "Present Evidence",
+        "Next Statement",
+        "media/placeholder.png",
+        pressStatement,
+        presentEvidence,
+        nextStatement
+    );
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+function nextStatement() {
+    statementIndex++;
+    if (statementIndex >= testimony.length) {
+        statementIndex = 0;
+    }
+    showStatement();
+}
+function pressStatement() {
+    ignoreClick = true;
+    setScene(
+        statementIndex === 2 ? "(Wait a second...)<br> 'Are you 100% certain you saw my client throwing that tea into the harbor?'" : "You lean forward.",
+        statementIndex === 2 ? "'I-I don't know what you mean. Of course I did!'" 
+            : statementIndex === 0 ? "Are you sure you were stationed specifically at Griffin's Wharf?" 
+            : statementIndex === 1 ? "If there was a mob of people, how can you be so certain my client was present?" 
+            : "'Are you absolutely certain about what you saw that night?'",
+        statementIndex === 2 ? "(Interesting...)" 
+            : statementIndex === 0 ? "W-what? Of course I was!" 
+            : statementIndex === 1 ? "I-I saw him! I know I did!"
+            : "Wilkes hesitates, then nods nervously. 'Y-Yes! I believe so!'",
+        "Return to testimony",
+        "",
+        "",
+        "media/placeholder.png",
+        showStatement
+    )
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+function presentEvidence() {
+    ignoreClick = true;
+    setScene(
+        "(What evidence will you present?)",
+        "",
+        "",
+        "Teabags",
+        "Security Tape",
+        "Return to testimony",
+        "media/placeholder.png",
+        wrongEvidence,
+        statementIndex === 2 ? objection : wrongEvidence,
+        showStatement
+    )
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+function objection() {
+    objectionEffect();
+    setTimeout(() => {
+        setScene(
+            "You slam the cassette tape onto the desk.",
+            "The security recording shows Elias Parker standing on the dock, not throwing tea!",
+            "The courtroom erupts in murmurs.",
+            "Continue",
+            "",
+            "",
+            "media/placeholder.png",
+            //witnessBreakdown
+        );
+    }, 700);
+}
+function wrongEvidence() {
+    reputation--;
+    if (reputation === 0) {
+        setScene(
+            "'OBJECTION!'",
+            "You present the evidence... but it doesn't contradict the testimony.",
+            "The judge has had enough, and feels ready to deliver a verdict.<br><br><span style='color: red; font-size: 50px;'><b>Guilty.</b></span><br><br>You have lost the case.",
+            "",
+            "",
+            "",
+            "media/placeholder.png",
+        );
+    } else {
+    setScene(
+        "'OBJECTION!'",
+        "You present the evidence... but it doesn't contradict the testimony.",
+        `The judge frowns.<br> 'What does this have to do with anything?'<br>'You reply, 'Err... whoops.' <br><br><i>-1 Reputation (Remaining: ${reputation})</i>`,
+        "Try again",
+        "",
+        "",
+        "media/placeholder.png",
+        showStatement
+    );
+    }
 }
