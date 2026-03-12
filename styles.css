@@ -167,6 +167,7 @@ body.trial-mode::after {
     display: none;
     align-items: center;
     justify-content: center;
+    text-align: center;
     pointer-events: none;
     z-index: 1000;
 }

@@ -5,10 +5,14 @@ const text3 = document.getElementById("para3");
 const button1 = document.getElementById("but1");
 const button2 = document.getElementById("but2");
 const button3 = document.getElementById("but3");
+const extrabutton = document.getElementById("extrabut");
+extrabutton.hidden = true;
 const start = document.getElementById("start");
 const visual = document.getElementById("visual");
 const bgm = document.getElementById("bgm");
 const soundButton = document.getElementById("sound");
+const tape = document.getElementById("tape");
+tape.hidden = true;
 let chargesRead = false;
 let talkedToClient = false;
 let inspectedEvidence = false;
@@ -104,8 +108,12 @@ function finishTyping() {
     typing = false;
 }
 // Main function for story loop, takes 3 texts, 3 buttons texts, image, and button actions
-function setScene(p1, p2 = "", p3 = "", b1 = "", b2 = "", b3 = "", img = "", a1 = null, a2 = null, a3 = null) {
-    typeText(text1, p1, 40);
+function setScene(p1 = "", p2 = "", p3 = "", b1 = "", b2 = "", b3 = "", img = "", a1 = null, a2 = null, a3 = null) {
+    if(p1) {
+        typeText(text1, p1, 40);
+    } else {
+        text1.innerHTML = p1;
+    }
     text2.innerHTML = p2;
     text3.innerHTML = p3;
 
@@ -350,6 +358,27 @@ function showStatement() {
         presentEvidence,
         nextStatement
     );
+    if (extrabutton.hidden) {
+        extrabutton.hidden = false;
+        extrabutton.innerHTML = "Review evidence";
+        extrabutton.addEventListener("click", function() {
+            ignoreClick = true;
+            extrabutton.hidden = true;
+            setScene(
+                "You check your evidence to look for any contradictions.",
+                "There's the tea bags, collected from one of the crates which were opened and thrown into the harbor. You remember that there was a report ran on the fingerprints on the teabags, but you lost them a long while before the case.",
+                "And then there's the cassette tape. The contents show your client, as well as many others, at the dock. Though, you don't think you saw him doing anything to the crates.",
+                "Return to testimony",
+                "",
+                "",
+                "media/placeholder.png",
+                startTestimony
+            )
+            setTimeout(() => {
+                ignoreClick = false;
+            }, 100);
+        })
+    }
     setTimeout(() => {
         ignoreClick = false;
     }, 100);
@@ -402,21 +431,27 @@ function presentEvidence() {
     }, 100);
 }
 function objection() {
+    ignoreClick = false;
+    extrabutton.hidden = true;
     objectionEffect();
     setTimeout(() => {
         setScene(
             "You slam the cassette tape onto the desk.",
-            "The security recording shows Elias Parker standing on the dock, not throwing tea!",
+            "How can you be so sure they were throwing the tea in, when my client is seen here, in this video tape, NOT throwing tea in at all?",
             "The courtroom erupts in murmurs.",
             "Continue",
             "",
             "",
             "media/placeholder.png",
-            //witnessBreakdown
+            witnesssurpise
         );
     }, 700);
+    setTimeout(() => {
+        ignoreClick = true;
+    }, 100);
 }
 function wrongEvidence() {
+    ignoreClick = true;
     reputation--;
     if (reputation === 0) {
         setScene(
@@ -440,4 +475,70 @@ function wrongEvidence() {
         showStatement
     );
     }
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+function witnesssurpise() {
+    ignoreClick = true;
+    setScene(
+        "The witness is taken aback by your statement",
+        "<span style='color: #948a35'>'Wh... Ahhh... Um... '</span>",
+        "<span style='color: #4287f5'>You add on, 'What's the matter? Tea got your tongue?'</span>",
+        "Continue",
+        "",
+        "",
+        "media/placeholder.png",
+        prosrebut
+    )
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+function prosrebut() {
+    ignoreClick = true;
+    objectionEffect()
+    setTimeout(() => {
+        setScene(
+            "'Objection.'",
+            "<span style='color: #f54040;'>Your Honor, we haven't even viewed the contents of the tape. How can we so easily believe that this tape is exactly what the defense claims it is?</span>",
+            "The judge replies, <span style='color: #f5af2f;'>'This is true. Mr. Rights, if you will, please present to the courtroom the contents of this tape.'</span>",
+            "Present tape",
+            "",
+            "",
+            "media/placeholder.png",
+            tapepresentation
+        )
+    }, 700);
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+function tapepresentation() {
+    ignoreClick = true;
+    setScene(
+        "'Gladly.'",
+        "You slot the cassette tape into the provided CRTV and grab the remote.",
+        "Everyone in the courtroom is watching, full of tension.",
+        "Play",
+        "",
+        "",
+        "media/placeholder.png",
+        playtape
+    )
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+function playtape() {
+    setScene();
+    visual.hidden = true;
+    tape.hidden = false;
+    tape.play();
+    setTimeout(() => {
+        tape.pause();
+        console.log("Setting scene after finishing tape")
+        setScene("", "", "", "Continue", "", "", "", explainvideo)
+    // todo: replace this timeout with length of actual tape
+    }, 5000);
 }
