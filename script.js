@@ -539,6 +539,28 @@ function playtape() {
         tape.pause();
         console.log("Setting scene after finishing tape")
         setScene("", "", "", "Continue", "", "", "", explainvideo)
+        console.log("Scene set!")
     // todo: replace this timeout with length of actual tape
     }, 5000);
+}
+function explainvideo() {
+    ignoreClick = true;
+    tape.hidden = true;
+    visual.hidden = false;
+    setScene(
+        "'As you can clearly see in this tape, my client is most obviously not even near the ships where the incident happened!'",
+        "'Easily, my client is innocent. This tape proves his innocence.'",
+        "The witness is staring, mouth agape, at a loss for words.",
+        "Continue",
+        "",
+        "",
+        "media/placeholder.png",
+        timestamphold
+    )
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+function timestamphold() {
+    console.log("In progress");
 }
