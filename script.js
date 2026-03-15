@@ -10,8 +10,16 @@ extrabutton.hidden = true;
 const start = document.getElementById("start");
 const visual = document.getElementById("visual");
 const bgm = document.getElementById("bgm");
+const objectionAudio = document.getElementById("objectionAudio");
+const gavel = document.getElementById("gavel");
+const testimony1 = document.getElementById("testimony1");
+const testimony2 = document.getElementById("testimony2");
+const contradiction1 = document.getElementById("contradiction1");
+const contradiction2 = document.getElementById("contradiction2");
+const finalpush = document.getElementById("finalpush");
 const soundButton = document.getElementById("sound");
 const tape = document.getElementById("tape");
+let currentsong = bgm;
 tape.hidden = true;
 let chargesRead = false;
 let talkedToClient = false;
@@ -21,6 +29,7 @@ let ignoreClick = false;
 let argued = false;
 let reputation = 3
 let statementIndex = 0
+let popup = document.getElementById("objection");
 const objectionWrap = document.getElementById("objectionWrap");
 const testimony = [
     "I was stationed at Griffin's Wharf that night, keeping an eye on the harbor...",
@@ -30,6 +39,14 @@ const testimony = [
 ]
 
 bgm.volume = 0.05;
+objectionAudio.volume = 0.05;
+gavel.volume = 0.05;
+testimony1.volume = 0.05;
+testimony2.volume = 0.05;
+contradiction1.volume = 0.05;
+contradiction2.volume = 0.05;
+finalpush.volume = 0.05;
+
 
 const blip = new Audio("audio/speak.wav");
 blip.volume = 0.05;
@@ -152,16 +169,20 @@ function toggleSound() {
     if (bgm.muted) { 
         bgm.muted = false; 
         soundButton.src = "media/sound.png"; 
-        bgm.play(); 
+        currentsong.play();
     } else { 
         bgm.muted = true; 
         soundButton.src = "media/nosound.png"; 
+        currentsong.pause();
     }
 }
 // Effect for successful objections
 function objectionEffect() {
     objectionWrap.classList.add("show-objection");
     document.body.classList.add("shake");
+    if (bgm.muted === false) {
+        objectionAudio.play();
+    }
 
     setTimeout(() => {
         objectionWrap.classList.remove("show-objection");
@@ -294,6 +315,7 @@ function argueevent() {
     ignoreClick = true;
     argued = true;
     reputation = reputation - 1;
+    objectionEffect();
     setScene(
         "'OBJECTION!'",
         "You exclaim towards the judge, apalled by your sudden and unnecessary response to the case statement.",
@@ -341,6 +363,11 @@ function callwitness() {
     }, 100);
 }
 function startTestimony() {
+    if (bgm.muted === false) {
+        bgm.pause();
+        testimony1.play();
+    }
+    currentsong = testimony1;
     statementIndex = 0;
     showStatement();
 }
@@ -434,25 +461,48 @@ function objection() {
     ignoreClick = false;
     extrabutton.hidden = true;
     objectionEffect();
+    currentsong = contradiction1;
+    if (bgm.muted === false) {
+        testimony1.pause();
+        contradiction1.muted = true;
+    }
     setTimeout(() => {
         setScene(
-            "You slam the cassette tape onto the desk.",
-            "How can you be so sure they were throwing the tea in, when my client is seen here, in this video tape, NOT throwing tea in at all?",
-            "The courtroom erupts in murmurs.",
+            "You slam your desk.",
+            "'Are you absolutely certain you saw my client throwing that tea into the harbor?'",
+            "The witness hesitates, then stutters, 'I-I... I'm pretty sure... I-I think I did...'",
             "Continue",
             "",
             "",
             "media/placeholder.png",
-            witnesssurpise
+            objectioncont
         );
     }, 700);
     setTimeout(() => {
         ignoreClick = true;
     }, 100);
 }
+function objectioncont() {
+    ignoreClick = true;
+    if (bgm.muted === false) {
+        contradiction1.play();
+        contradiction1.muted = false;
+    }
+    setScene(
+        "'Well then, how can you explain THIS?'",
+        "You slam the cassette tape onto the desk.",
+        "'This tape shows my client at the dock, but not throwing any tea into the harbor. How can you be so sure you saw him do that?'",
+        "Continue",
+        "",
+        "",
+        "media/placeholder.png",
+        witnesssurpise
+    )
+}
 function wrongEvidence() {
     ignoreClick = true;
     reputation--;
+    objectionEffect();
     if (reputation === 0) {
         setScene(
             "'OBJECTION!'",
@@ -482,7 +532,7 @@ function wrongEvidence() {
 function witnesssurpise() {
     ignoreClick = true;
     setScene(
-        "The witness is taken aback by your statement",
+        "The witness is taken aback by your evidence, and is at a loss for words.",
         "<span style='color: #948a35'>'Wh... Ahhh... Um... '</span>",
         "<span style='color: #4287f5'>You add on, 'What's the matter? Tea got your tongue?'</span>",
         "Continue",
@@ -531,15 +581,14 @@ function tapepresentation() {
     }, 100);
 }
 function playtape() {
+    currentsong.pause();
     setScene();
     visual.hidden = true;
     tape.hidden = false;
     tape.play();
     setTimeout(() => {
         tape.pause();
-        console.log("Setting scene after finishing tape")
         setScene("", "", "", "Continue", "", "", "", explainvideo)
-        console.log("Scene set!")
     // todo: replace this timeout with length of actual tape
     }, 5000);
 }
@@ -547,6 +596,7 @@ function explainvideo() {
     ignoreClick = true;
     tape.hidden = true;
     visual.hidden = false;
+    currentsong.play();
     setScene(
         "'As you can clearly see in this tape, my client is most obviously not even near the ships where the incident happened!'",
         "'Easily, my client is innocent. This tape proves his innocence.'",
@@ -562,5 +612,23 @@ function explainvideo() {
     }, 100);
 }
 function timestamphold() {
-    console.log("In progress");
+    ignoreClick = true;
+    popup.src = "media/holdit.webp";
+    objectionEffect();
+    setScene(
+        "'Hold it.'",
+        "The prosecutor looks at the tape, and then back at you. He realizes something, then looks at you smugly.<br><br>'Mr. Rights, I believe you have made a crucial mistake.'",
+        "The prosecutor continues, 'There is no timestamp on this tape. How can we be sure this tape is from the night of the incident?'",
+        "Continue",
+        "",
+        "",
+        "media/placeholder.png",
+        timestamphold2
+    )
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+function timestamphold2() {
+    ignoreClick = true;
 }
