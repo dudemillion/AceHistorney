@@ -715,17 +715,14 @@ function tapepresentation() {
         ignoreClick = false;
     }, 100);
 }
+
+// i couldnt finish the tape
 function playtape() {
     stopTrack();
     setScene();
     visual.hidden = true;
     tape.hidden = false;
-    if (soundEnabled) {
-        tape.currentTime = 0;
-        tape.play().catch(() => {});
-    }
     setTimeout(() => {
-        tape.pause();
         setScene("", "", "", "Continue", "", "", "", explainvideo);
     }, 5000);
 }
