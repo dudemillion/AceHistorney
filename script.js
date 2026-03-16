@@ -592,7 +592,7 @@ function presentEvidence() {
         "media/reviewevidence.png",
         wrongEvidence,
         statementIndex === 2 ? objection : wrongEvidence,
-        showStatement
+        testimonyPhase === 2 ? showrevisedstatement : showStatement
     )
     setTimeout(() => {
         ignoreClick = false;
@@ -1089,7 +1089,7 @@ function finalPushIntro() {
         "Continue",
         "",
         "",
-        "media/defthink.png",
+        "media/thinkdef.png",
         finalreasoning
     );
     setTimeout(() => {
