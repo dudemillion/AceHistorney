@@ -748,7 +748,7 @@ function explainvideo() {
 
 function timestamphold() {
     ignoreClick = true;
-    popup.src = "media/holdit.webp";
+    popup.src = "media/holdit.png";
     stopTrack(testimony1);
     objectionEffect();
     setScene(
