@@ -832,7 +832,7 @@ function casefail() {
 function timestampholdsuccess2() {
     playTrack(contradiction1);
     ignoreClick = true;
-    popup.src = "media/holdit.webp";
+    popup.src = "media/holdit.png";
     objectionEffect();
     setScene(
         "'Hold it!'",
@@ -1010,7 +1010,7 @@ function presentrevisedevidence() {
 }
 
 function lanternlogobjection() {
-    popup.src = "media/objection.webp";
+    popup.src = "media/objection.png";
     playTrack(contradiction2);
     objectionEffect();
     extrabutton.hidden = true;
@@ -1099,7 +1099,7 @@ function finalPushIntro() {
 
 function finalreasoning() {
     ignoreClick = true;
-    popup.src = "media/holdit.webp";
+    popup.src = "media/holdit.png";
     playTrack(finalpush);
     objectionEffect();
     setScene(
@@ -1171,7 +1171,7 @@ function prosecutorlastrebut() {
 
 function finalanswer() {
     ignoreClick = true;
-    popup.src = "media/holdit.webp";
+    popup.src = "media/holdit.png";
     objectionEffect();
     setScene(
         "'HOLD IT! Despite the assumptions and suspicions, the prosecution has failed to provide any evidence that my client is guilty.'",
