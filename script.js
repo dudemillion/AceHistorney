@@ -1010,7 +1010,7 @@ function presentrevisedevidence() {
 }
 
 function lanternlogobjection() {
-    popup.src = "media/objection.png";
+    popup.src = "media/objectiontext.png";
     playTrack(contradiction2);
     objectionEffect();
     extrabutton.hidden = true;
