@@ -17,18 +17,36 @@ const testimony2 = document.getElementById("testimony2");
 const contradiction1 = document.getElementById("contradiction1");
 const contradiction2 = document.getElementById("contradiction2");
 const finalpush = document.getElementById("finalpush");
+const victory = document.getElementById("victory");
 const soundButton = document.getElementById("sound");
 const tape = document.getElementById("tape");
-let currentsong = bgm;
+const inputSection = document.getElementById("inputSection");
+const inputPrompt = document.getElementById("inputPrompt");
+const playerInput = document.getElementById("playerInput");
+const submitInput = document.getElementById("submitInput");
+let testimonyPhase = 1;
+let currentTrack = null;
+let soundEnabled = false;
 tape.hidden = true;
 let chargesRead = false;
 let talkedToClient = false;
 let inspectedEvidence = false;
 let evidence = [];
+const evidenceNames = {
+    "teabags": "Tea Bags",
+    "security tape": "Security Tape",
+    "lantern log": "Lantern Duty Log"
+};
+const evidenceDescriptions = {
+    "teabags": "Tea Bags — Collected from one of the destroyed crates at Griffin's Wharf.",
+    "security tape": "Security Tape — Harbor footage from the night of the incident showing Elias at the dock.",
+    "lantern log": "Lantern Duty Log — A record showing the harbor lanterns were extinguished at 6:00 PM."
+};
 let ignoreClick = false;
 let argued = false;
 let reputation = 3
 let statementIndex = 0
+let revisedStatementIndex = 0;
 let popup = document.getElementById("objection");
 const objectionWrap = document.getElementById("objectionWrap");
 const testimony = [
@@ -37,7 +55,12 @@ const testimony = [
     "I clearly saw the defendant, Elias Parker, throwing crates of tea into the harbor!",
     "There's no doubt in my mind about it!"
 ]
-
+const revisedTestimony = [
+    "Okay, okay, I may not have seen the exact moment the tea hit the water...",
+    "But I definitely saw the defendant standing near the crates before they were destroyed.",
+    "The view was completely clear, and well lit. Enough so that I could see the defendant's face.",
+    "I know it was him!"
+];
 bgm.volume = 0.05;
 objectionAudio.volume = 0.05;
 gavel.volume = 0.05;
@@ -46,6 +69,7 @@ testimony2.volume = 0.05;
 contradiction1.volume = 0.05;
 contradiction2.volume = 0.05;
 finalpush.volume = 0.05;
+victory.volume = 0.05;
 
 
 const blip = new Audio("audio/speak.wav");
@@ -55,7 +79,6 @@ let typing = false;
 let fullText = "";
 let currentIndex = 0;
 let typingTimeout;
-let soundEnabled = true;
 
 // Text typing sound
 function playBlip() {
@@ -164,30 +187,169 @@ start.addEventListener("click", function(event) {
     event.stopPropagation();
     startTrial();
 });
+
+// submit button event listener
+submitInput.addEventListener("click", handleInputAnswer);
+
+// keydown event to finish typing
+document.addEventListener("keydown", function(e) {
+    if (e.key === " " && typing) {
+        finishTyping();
+    }
+});
+
+visual.addEventListener("mouseover", function() {
+    visual.style.filter = "brightness(1.15)";
+});
+
+visual.addEventListener("mouseout", function() {
+    visual.style.filter = "brightness(1)";
+});
+
 // Mute/unmute toggles for the music
-function toggleSound() { 
-    if (bgm.muted) { 
-        bgm.muted = false; 
-        soundButton.src = "media/sound.png"; 
-        currentsong.play();
-    } else { 
-        bgm.muted = true; 
-        soundButton.src = "media/nosound.png"; 
-        currentsong.pause();
+function toggleSound() {
+    soundEnabled = !soundEnabled;
+    if (soundEnabled) {
+        soundButton.src = "media/sound.png";
+        if (currentTrack) {
+            currentTrack.play().catch(() => {});
+        }
+    } else {
+        soundButton.src = "media/nosound.png";
+        if (currentTrack) {
+            currentTrack.pause();
+        }
     }
 }
 // Effect for successful objections
 function objectionEffect() {
+    objectionWrap.classList.remove("show-objection");
+    void objectionWrap.offsetWidth;
     objectionWrap.classList.add("show-objection");
     document.body.classList.add("shake");
-    if (bgm.muted === false) {
-        objectionAudio.play();
-    }
-
+    playSfx(objectionAudio);
     setTimeout(() => {
         objectionWrap.classList.remove("show-objection");
         document.body.classList.remove("shake");
     }, 900);
+}
+
+// show input box
+function showInputChallenge(promptText) {
+    inputSection.hidden = false;
+    inputPrompt.textContent = promptText;
+    playerInput.value = "";
+    playerInput.focus();
+}
+
+// hide input box
+function hideInputChallenge() {
+    inputSection.hidden = true;
+    inputPrompt.textContent = "";
+    playerInput.value = "";
+}
+
+// Music handlers
+function playTrack(track, loop = true) {
+    if (currentTrack && currentTrack !== track) {
+        currentTrack.pause();
+        currentTrack.currentTime = 0;
+    }
+    currentTrack = track;
+    currentTrack.loop = loop;
+    if (soundEnabled) {
+        try {
+            currentTrack.play().catch(() => {});
+        } catch (err) {
+            console.error("Track failed to play:", err);
+        }
+    }
+}
+
+// stops music tracks
+function stopTrack() {
+    if (currentTrack) {
+        currentTrack.pause();
+        currentTrack.currentTime = 0;
+    }
+    currentTrack = null;
+}
+
+// SFX player
+function playSfx(sound) {
+    if (!soundEnabled) {
+        return;
+    }
+    try {
+        sound.currentTime = 0;
+        sound.play().catch(() => {});
+    } catch (err) {
+        console.error("SFX failed to play:", err);
+    }
+}
+
+// reviews evidence by looping through the evidence array and showing the descriptions of each item
+function reviewEvidence() {
+    ignoreClick = true;
+    extrabutton.hidden = true;
+
+    let evidenceList = "";
+    for (let i = 0; i < evidence.length; i++) {
+        const item = evidence[i];
+        evidenceList += `<b>${evidenceNames[item]}</b><br>${evidenceDescriptions[item]}<br><br>`;
+    }
+    setScene(
+        "You open your evidence folder and review the items collected from the scene.",
+        evidenceList,
+        "One of these may expose a contradiction in the witness testimony.",
+        "Return to testimony",
+        "",
+        "",
+        "media/reviewevidence.png",
+        returnToCurrentTestimony
+    );
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+
+// returns to the current testimony based on the testimonyPhase variable
+function returnToCurrentTestimony() {
+    if (testimonyPhase === 2) {
+        showrevisedstatement();
+    } else {
+        showStatement();
+    }
+}
+
+// event listener for the extra button to review evidence
+extrabutton.addEventListener("click", reviewEvidence);
+
+// checks players input if its correect or not
+function handleInputAnswer() {
+    const answer = playerInput.value.trim().toLowerCase();
+
+    if (answer === "griffin's wharf" || answer === "griffins wharf") {
+        hideInputChallenge();
+        setScene(
+            "'Exactly, Your Honor.'",
+            "You answer without hesitation: 'The incident took place at Griffin's Wharf.'",
+            "The court accepts your response and seems satisfied with the case.",
+            "Continue",
+            "",
+            "",
+            "media/telljudge.png",
+            judgeverdictbuild
+        );
+    } else {
+        reputation--;
+        if (reputation <= 0) {
+            hideInputChallenge();
+            mistrialEnding();
+        } else {
+            text3.innerHTML = `Incorrect. <br><br><i>-1 Reputation (Remaining: ${reputation})</i>`;
+        }
+    }
 }
 // First scene, removes titlescreen and makes everything else come in.
 function startTrial() {
@@ -200,7 +362,7 @@ function startTrial() {
 }
 function prepScene() {
     ignoreClick = true;
-
+    playTrack(bgm);
     if (chargesRead && talkedToClient && inspectedEvidence) {
         setScene(
             "You feel ready for the trial. You have everything you need. Just... breathe.",
@@ -209,7 +371,7 @@ function prepScene() {
             "",
             "Start Trial",
             "",
-            "media/placeholder.png",
+            "media/lookpros.png",
             null,
             begintrial,
             null
@@ -262,7 +424,7 @@ function talkToClient() {
         "Read Charges",
         chargesRead && inspectedEvidence && talkedToClient ? "I'm ready." : "Return",
         "Inspect Evidence",
-        "media/placeholder.png",
+        "media/talkclient.png",
         readCharges,
         prepScene,
         inspectEvidence
@@ -285,7 +447,7 @@ function inspectEvidence() {
         "Read Charges",
         "Talk to client",
         chargesRead && inspectedEvidence && talkedToClient ? "I'm ready." : "Return",
-        "media/placeholder.png",
+        "media/reviewevidence.png",
         readCharges,
         talkToClient,  
         prepScene
@@ -303,7 +465,7 @@ function begintrial() {
         "Listen",
         argued ? "" : "Argue",
         "",
-        "media/placeholder.png",
+        "media/judge.png",
         prosecutorOpening,
         argued ? null : argueevent
     );
@@ -323,7 +485,7 @@ function argueevent() {
         "Apologize & Continue",
         "",
         "",
-        "media/placeholder.png",
+        "media/objection.png",
         begintrial
     )
     setTimeout(() => {
@@ -339,7 +501,7 @@ function prosecutorOpening() {
         "Continue",
         "",
         "",
-        "media/placeholder.png",
+        "media/prosopen.png",
         callwitness
     )
     setTimeout(() => {
@@ -355,7 +517,7 @@ function callwitness() {
         "Continue",
         "",
         "",
-        "media/placeholder.png",
+        "media/calwit.png",
         startTestimony
     )
     setTimeout(() => {
@@ -363,16 +525,15 @@ function callwitness() {
     }, 100);
 }
 function startTestimony() {
-    if (bgm.muted === false) {
-        bgm.pause();
-        testimony1.play();
-    }
-    currentsong = testimony1;
+    testimonyPhase = 1;
+    playTrack(testimony1);
     statementIndex = 0;
     showStatement();
 }
 function showStatement() {
     ignoreClick = true;
+    extrabutton.hidden = false;
+    extrabutton.innerHTML = "Review evidence";
     setScene(
         `"${testimony[statementIndex]}"`,
         "",
@@ -380,36 +541,16 @@ function showStatement() {
         "Press",
         "Present Evidence",
         "Next Statement",
-        "media/placeholder.png",
+        "media/witness1.png",
         pressStatement,
         presentEvidence,
         nextStatement
     );
-    if (extrabutton.hidden) {
-        extrabutton.hidden = false;
-        extrabutton.innerHTML = "Review evidence";
-        extrabutton.addEventListener("click", function() {
-            ignoreClick = true;
-            extrabutton.hidden = true;
-            setScene(
-                "You check your evidence to look for any contradictions.",
-                "There's the tea bags, collected from one of the crates which were opened and thrown into the harbor. You remember that there was a report ran on the fingerprints on the teabags, but you lost them a long while before the case.",
-                "And then there's the cassette tape. The contents show your client, as well as many others, at the dock. Though, you don't think you saw him doing anything to the crates.",
-                "Return to testimony",
-                "",
-                "",
-                "media/placeholder.png",
-                startTestimony
-            )
-            setTimeout(() => {
-                ignoreClick = false;
-            }, 100);
-        })
-    }
     setTimeout(() => {
         ignoreClick = false;
     }, 100);
 }
+
 function nextStatement() {
     statementIndex++;
     if (statementIndex >= testimony.length) {
@@ -432,7 +573,7 @@ function pressStatement() {
         "Return to testimony",
         "",
         "",
-        "media/placeholder.png",
+        "media/witnessscared.png",
         showStatement
     )
     setTimeout(() => {
@@ -448,7 +589,7 @@ function presentEvidence() {
         "Teabags",
         "Security Tape",
         "Return to testimony",
-        "media/placeholder.png",
+        "media/reviewevidence.png",
         wrongEvidence,
         statementIndex === 2 ? objection : wrongEvidence,
         showStatement
@@ -458,14 +599,10 @@ function presentEvidence() {
     }, 100);
 }
 function objection() {
-    ignoreClick = false;
     extrabutton.hidden = true;
+    playTrack(contradiction1);
     objectionEffect();
-    currentsong = contradiction1;
-    if (bgm.muted === false) {
-        testimony1.pause();
-        contradiction1.muted = true;
-    }
+    ignoreClick = true;
     setTimeout(() => {
         setScene(
             "You slam your desk.",
@@ -474,20 +611,17 @@ function objection() {
             "Continue",
             "",
             "",
-            "media/placeholder.png",
+            "media/aftercrtv.png",
             objectioncont
         );
     }, 700);
     setTimeout(() => {
-        ignoreClick = true;
+        ignoreClick = false;
     }, 100);
 }
 function objectioncont() {
     ignoreClick = true;
-    if (bgm.muted === false) {
-        contradiction1.play();
-        contradiction1.muted = false;
-    }
+    playTrack(contradiction1);
     setScene(
         "'Well then, how can you explain THIS?'",
         "You slam the cassette tape onto the desk.",
@@ -495,7 +629,7 @@ function objectioncont() {
         "Continue",
         "",
         "",
-        "media/placeholder.png",
+        "media/casette.png",
         witnesssurpise
     )
 }
@@ -504,6 +638,7 @@ function wrongEvidence() {
     reputation--;
     objectionEffect();
     if (reputation === 0) {
+        stopTrack();
         setScene(
             "'OBJECTION!'",
             "You present the evidence... but it doesn't contradict the testimony.",
@@ -511,7 +646,7 @@ function wrongEvidence() {
             "",
             "",
             "",
-            "media/placeholder.png",
+            "media/judge.png",
         );
     } else {
     setScene(
@@ -521,7 +656,7 @@ function wrongEvidence() {
         "Try again",
         "",
         "",
-        "media/placeholder.png",
+        "media/mistake.png",
         showStatement
     );
     }
@@ -538,7 +673,7 @@ function witnesssurpise() {
         "Continue",
         "",
         "",
-        "media/placeholder.png",
+        "media/witnessscared.png",
         prosrebut
     )
     setTimeout(() => {
@@ -556,7 +691,7 @@ function prosrebut() {
             "Present tape",
             "",
             "",
-            "media/placeholder.png",
+            "media/proscontent.png",
             tapepresentation
         )
     }, 700);
@@ -573,7 +708,7 @@ function tapepresentation() {
         "Play",
         "",
         "",
-        "media/placeholder.png",
+        "media/tapein.png",
         playtape
     )
     setTimeout(() => {
@@ -581,22 +716,24 @@ function tapepresentation() {
     }, 100);
 }
 function playtape() {
-    currentsong.pause();
+    stopTrack();
     setScene();
     visual.hidden = true;
     tape.hidden = false;
-    tape.play();
+    if (soundEnabled) {
+        tape.currentTime = 0;
+        tape.play().catch(() => {});
+    }
     setTimeout(() => {
         tape.pause();
-        setScene("", "", "", "Continue", "", "", "", explainvideo)
-    // todo: replace this timeout with length of actual tape
+        setScene("", "", "", "Continue", "", "", "", explainvideo);
     }, 5000);
 }
 function explainvideo() {
     ignoreClick = true;
     tape.hidden = true;
     visual.hidden = false;
-    currentsong.play();
+    playTrack(contradiction1);
     setScene(
         "'As you can clearly see in this tape, my client is most obviously not even near the ships where the incident happened!'",
         "'Easily, my client is innocent. This tape proves his innocence.'",
@@ -604,16 +741,18 @@ function explainvideo() {
         "Continue",
         "",
         "",
-        "media/placeholder.png",
+        "media/aftercrtv.png",
         timestamphold
-    )
+    );
     setTimeout(() => {
         ignoreClick = false;
     }, 100);
 }
+
 function timestamphold() {
     ignoreClick = true;
     popup.src = "media/holdit.webp";
+    stopTrack(testimony1);
     objectionEffect();
     setScene(
         "'Hold it.'",
@@ -622,7 +761,7 @@ function timestamphold() {
         "Continue",
         "",
         "",
-        "media/placeholder.png",
+        "media/smugpros.png",
         timestamphold2
     )
     setTimeout(() => {
@@ -631,4 +770,504 @@ function timestamphold() {
 }
 function timestamphold2() {
     ignoreClick = true;
+    setScene(
+        "(Shoot! I forgot to check the timestamp on the tape! I need to find a way to prove this tape is from the night of the incident.)",
+        "'Mr. Wrights. The prosecution has made a valid point. Can you prove this tape is from the night of the incident?'",
+        "The judge looks at you, waiting for your response.<br><br>(Come on! Think! Is there a way to prove this tape is from the night of the incident?)",
+        "I can't prove it.",
+        "I can prove it.",
+        "",
+        "media/thinkdef.png",
+        timestampholdfail,
+        timestampholdsuccess
+    )
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+function timestampholdfail() {
+    ignoreClick = true;
+    setScene(
+        "'I can't prove it.'",
+        "The judge replies, 'Then the court will have to void this evidence. I will have to consider the case without it, and the prosecution's case is quite strong. Is there any further evidence you wish to present?'",
+        "'I... uhm... (Dang it! There's no evidence to prove it!)<br><br>After a long pause, you say, 'Your Honor, the defense has no further evidence to present.'",
+        "Continue",
+        "",
+        "",
+        "media/mistake.png",
+        casefail
+    )
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+function timestampholdsuccess() {
+    ignoreClick = true;
+    setScene(
+        "'I can prove it.'",
+        "'Really then? Then explain to the court how you can prove this claim.'",
+        "The prosecutor smirks at you, confident that you have no way to prove it. You know you have to think fast, and find a way to prove this tape is from the night of the incident.",
+        "Wait!",
+        "",
+        "",
+        "media/objection.png",
+        timestampholdsuccess2
+    )
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+function casefail() {
+    ignoreClick = true;
+    setScene(
+        "'I apologize, Your Honor.'",
+        "The judge glares at you, disappointed. 'This court has heard enough. The defendant is hereby found <span style='color: red; font-size: 50px;'><b>Guilty</b></span> of the charges against him.'",
+        "You have lost the case.",
+        "",
+        "",
+        "",
+        "media/judge.png",
+    );
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+function timestampholdsuccess2() {
+    playTrack(contradiction1);
+    ignoreClick = true;
+    popup.src = "media/holdit.webp";
+    objectionEffect();
+    setScene(
+        "'Hold it!'",
+        "You slam your hands onto the desk. 'The tape itself may not contain a timestamp... but it does contain something just as useful.'",
+        "The judge leans forward. 'And what, exactly, would that be?'",
+        "Present evidence",
+        "",
+        "",
+        "media/slamdesk.png",
+        teabaglink
+    );
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+
+function teabaglink() {
+    ignoreClick = true;
+    setScene(
+        "'These tea leaves, Your Honor.'",
+        "You hold up the evidence bag. 'These were collected from one of the damaged crates at Griffin's Wharf after the incident.'",
+        "'And in the footage, one can clearly see a crate already split open, spilling the same type of tea onto the dock.'",
+        "Continue",
+        "",
+        "",
+        "media/teaevidence.png",
+        teabagexplain
+    );
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+
+function teabagexplain() {
+    ignoreClick = true;
+    setScene(
+        "You point toward the screen.",
+        "'That damage did not exist before the harbor disturbance. The crate shown in this footage is already broken open, and tea is already spilling from it.'",
+        "'This means the recording could only have been taken during or immediately after the destruction of the tea that night.'",
+        "Continue",
+        "",
+        "",
+        "media/telljudge.png",
+        judgeacceptslink
+    );
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+
+function judgeacceptslink() {
+    ignoreClick = true;
+    setScene(
+        "The judge strokes his chin thoughtfully.",
+        "'Hm. So while the tape does not show the hour, the state of the cargo shown within it does align with the physical evidence collected from the crime scene.'",
+        "The prosecutor's smug expression falters for the first time.",
+        "Continue",
+        "",
+        "",
+        "media/judgethink.png",
+        witnessCornered
+    );
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+
+function witnessCornered() {
+    ignoreClick = true;
+    setScene(
+        "'If this tape truly shows the harbor during the incident,' you say, 'then my client was present... but not handling the tea.'",
+        "You point at Thomas Wilkes. 'So I ask again: how could you have seen Elias Parker throwing crates into the harbor?'",
+        "The witness begins to tremble.",
+        "Continue",
+        "",
+        "",
+        "media/askwitness.png",
+        startrevisedtestimony1
+    );
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+
+function startrevisedtestimony1() {
+    ignoreClick = true;
+    if (!evidence.includes("lantern log")) {
+    evidence.push("lantern log");
+    }
+    setScene(
+        "The witness wipes sweat from his brow and quickly changes his story.",
+        "<span style='color: #948a35;'>'A-Alright... maybe I did not see the exact moment the tea was thrown.'</span>",
+        "<span style='color: #948a35;'>'But I still saw the defendant near the crates before they were destroyed!'</span><br><br>(During the altercation over the tape, the bailiff retrieves the harbor manintenance log from the court records and submits it to the judge.)",
+        "Continue",
+        "",
+        "",
+        "media/witnessscared.png",
+        startrevisedtestimony2
+    );
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+
+function startrevisedtestimony2() {
+    testimonyPhase = 2;
+    playTrack(testimony2);
+    revisedStatementIndex = 0;
+    showrevisedstatement();
+}
+
+function showrevisedstatement() {
+    ignoreClick = true;
+    extrabutton.hidden = false;
+    extrabutton.innerHTML = "Review evidence";
+    setScene(
+        `"${revisedTestimony[revisedStatementIndex]}"`,
+        "",
+        "",
+        "Press",
+        "Present Evidence",
+        "Next Statement",
+        "media/witnessscared.png",
+        pressrevisedstatement,
+        presentrevisedevidence,
+        nextrevisedstatement
+    );
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+
+function nextrevisedstatement() {
+    revisedStatementIndex++;
+    if (revisedStatementIndex >= revisedTestimony.length) {
+        revisedStatementIndex = 0;
+    }
+    showrevisedstatement();
+}
+
+function pressrevisedstatement() {
+    ignoreClick = true;
+    setScene(
+        revisedStatementIndex === 2 ? "'You claim the lanterns gave enough light for a clear view?'" : "You press the witness for more detail.",
+        revisedStatementIndex === 0 ? "<span style='color: #948a35;'>I-I was mistaken about that exact part, alright?</span>" : revisedStatementIndex === 1 ? "<span style='color: #948a35;'>He was near the crates! I know he was!</span>" : revisedStatementIndex === 2 ? "<span style='color: #948a35;'>O-Of course! The dock was lit well enough for me to see!</span>" : "<span style='color: #948a35;'>I know what I saw! I won't change my answer again!</span>", 
+        revisedStatementIndex === 2 ? "(The lanterns... wait. That's it.)" : "",
+        "Return to testimony",
+        "",
+        "",
+        "media/witnessscared.png",
+        showrevisedstatement
+    );
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+
+function presentrevisedevidence() {
+    ignoreClick = true;
+    setScene(
+        "(What evidence will you present?)",
+        "",
+        "",
+        "Teabags",
+        "Lantern Log",
+        "Return to testimony",
+        "media/witnessscared.png",
+        wrongEvidence,
+        revisedStatementIndex === 2 ? lanternlogobjection : wrongEvidence,
+        showrevisedstatement
+    );
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+
+function lanternlogobjection() {
+    popup.src = "media/objection.webp";
+    playTrack(contradiction2);
+    objectionEffect();
+    extrabutton.hidden = true;
+    setTimeout(() => {
+        setScene(
+            "'OBJECTION!'",
+            "You raise a folded document high above your desk.",
+            "'This Lantern Duty Log states that the harbor lanterns were extinguished before the disturbance began. If that is true, then the dock was far too dark for this witness to identify anyone clearly!'",
+            "Continue",
+            "",
+            "",
+            "media/dcument.png",
+            lanternlogexplain
+        );
+    }, 700);
+}
+
+function lanternlogexplain() {
+    ignoreClick = true;
+    setScene(
+        "The judge adjusts his glasses and reads the document carefully.",
+        "'According to this record... the lanterns along Griffin's Wharf were put out earlier that evening, at 6:00 PM. The disturbance began at 7:00 PM, meaning the dock was in complete darkness.'",
+        "You point toward the witness. 'So tell me, Thomas Wilkes... how exactly did you recognize Elias Parker in the dark?'",
+        "Continue",
+        "",
+        "",
+        "media/eaddoc.png",
+        revisedwitnessbreakdown
+    );
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+
+function revisedwitnessbreakdown() {
+    ignoreClick = true;
+    setScene(
+        "The witness recoils, his face turning pale.",
+        "<span style='color: #948a35;'>'I... I... maybe the moonlight...! Maybe I only thought I saw him clearly...!'</span>",
+        "The courtroom bursts into murmurs as the witness begins to fall apart.",
+        "Continue",
+        "",
+        "",
+        "media/witnessscared.png",
+        prosecutordamagecontrol
+    );
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+
+function prosecutordamagecontrol() {
+    ignoreClick = true;
+    objectionEffect();
+    setScene(
+        "'Objection.'",
+        "<span style='color: #f54040;'>Even if the witness was mistaken about visibility, the defendant still admits he was present at the harbor that night.</span>",
+        "<span style='color: #f54040;'>Presence alone may not prove his guilt, but it certainly does not prove his innocence!</span>",
+        "Continue",
+        "",
+        "",
+        "media/prosopen.png",
+        finalPushIntro
+    );
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+
+function finalPushIntro() {
+    ignoreClick = true;
+    setScene(
+        "(He's right... being there doesn't automatically make Elias innocent.)",
+        "(But the prosecution still has no proof that Elias ever touched the tea.)",
+        "This is it. One final push should break the case open.",
+        "Continue",
+        "",
+        "",
+        "media/defthink.png",
+        finalreasoning
+    );
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+
+function finalreasoning() {
+    ignoreClick = true;
+    popup.src = "media/holdit.webp";
+    playTrack(finalpush);
+    objectionEffect();
+    setScene(
+        "'HOLD IT!' 'Your Honor, the prosecution's entire case rests on one assumption.'",
+        "'That is that Elias Parker was present at Griffin's Wharf, he must have taken part in the destruction of the tea.'",
+        "'But presence is not proof of guilt!'",
+        "Continue",
+        "",
+        "",
+        "media/objection.png",
+        finalreasoning2
+    );
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+
+function finalreasoning2() {
+    ignoreClick = true;
+    setScene(
+        "'The witness has now admitted he could not clearly identify my client.'",
+        "'The tape shows my client standing at the dock, but never handling a single crate.'",
+        "'And the prosecution has failed to produce any physical evidence tying Elias Parker to the tea itself.'",
+        "Continue",
+        "",
+        "",
+        "media/objection.png",
+        finalreasoning3
+    );
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+
+function finalreasoning3() {
+    ignoreClick = true;
+    setScene(
+        "You slam your hands onto the desk one last time.",
+        "'This court has heard plenty of suspicion and assumption, but it never heard solid proof!'",
+        "'And without proof, the Crown has no case against Elias Parker.'",
+        "Continue",
+        "",
+        "",
+        "media/slamdesk.png",
+        prosecutorlastrebut
+    );
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+
+function prosecutorlastrebut() {
+    ignoreClick = true;
+    objectionEffect();
+    setScene(
+        "'Objection.'",
+        "<span style='color: #f54040;'>The defendant still admits he was at the harbor that night. That alone is suspicious.</span>",
+        "<span style='color: #f54040;'>Surely the defense cannot expect this court to ignore that fact.</span>",
+        "Continue",
+        "",
+        "",
+        "media/prosopen.png",
+        finalanswer
+    );
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+
+function finalanswer() {
+    ignoreClick = true;
+    popup.src = "media/holdit.webp";
+    objectionEffect();
+    setScene(
+        "'HOLD IT! Despite the assumptions and suspicions, the prosecution has failed to provide any evidence that my client is guilty.'",
+        "'The law states that the judge must decide based on evidence, not on suspicion!'",
+        "'And the evidence at hand does not prove Elias Parker destroyed the tea.'",
+        "Answer the judge",
+        "",
+        "",
+        "media/objection.png",
+        finalquestion
+    );
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+
+function finalquestion() {
+    setScene(
+        "The judge looks at you one last time.",
+        "'Very well, defense. Then answer this clearly for the court.'",
+        "'At what harbor location did this incident take place?'",
+        "",
+        "",
+        "",
+        "media/judgeask.png"
+    );
+    showInputChallenge("Type the harbor location.");
+}
+
+function judgeverdictbuild() {
+    ignoreClick = true;
+    stopTrack();
+    playSfx(gavel);
+    setScene(
+        "'ORDER! ORDER IN THE COURT!', the Judge exclaims. The courtroom falls silent.",
+        "The judge lowers his head, thinking carefully over everything that has been presented.",
+        "'This court must determine whether the prosecution has proven the defendant's guilt beyond reasonable doubt.'",
+        "Continue",
+        "",
+        "",
+        "media/judgethink.png",
+        verdict
+    );
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+
+// if player enters wrong answer and reputation goes to 0, the judge declares a mistrial
+function mistrialEnding() {
+    hideInputChallenge();
+    stopTrack();
+    setScene(
+        "'Hmm... it seems this court cannot reach a clean conclusion from the evidence presented today.'",
+        "The judge strikes the gavel. 'The matter is suspended pending further review.'",
+        "<span style='color: gold; font-size: 50px;'><b>Mistrial.</b></span>",
+        "",
+        "",
+        "",
+        "media/judge.png"
+    );
+}
+
+function verdict() {
+    ignoreClick = true;
+    playTrack(victory);
+    setScene(
+        "'After reviewing the testimony and evidence presented before this court...'",
+        "'The prosecution has failed to prove that Elias Parker directly participated in the destruction of East India Company property.'",
+        "<span style='color: #4cff4c; font-size: 50px;'><b>Not Guilty.</b></span>",
+        "Finish",
+        "",
+        "",
+        "media/judge.png",
+        endingScene
+    );
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
+}
+
+function endingScene() {
+    ignoreClick = true;
+    setScene(
+        "Elias exhales shakily, as though he had been holding his breath the entire trial.",
+        "'Thank you,' he whispers.",
+        "The courtroom slowly empties, but you know one thing for certain: today, the Crown did not get the easy conviction it wanted.",
+        "",
+        "",
+        "",
+        "media/hug.png"
+    );
+    setTimeout(() => {
+        ignoreClick = false;
+    }, 100);
 }

@@ -9,7 +9,7 @@
 </head>
 <body>
     <img src="media/nosound.png" id="sound" onclick="toggleSound()">
-    <audio id="bgm" src="audio/lobby.weba" loop muted></audio>
+    <audio id="bgm" src="audio/lobby.weba" loop></audio>
     <audio id="objectionAudio" src="audio/objection.wav"></audio>
     <audio id="gavel" src="audio/gavel.wav"></audio>
     <audio id="testimony1" src="audio/testimony1.weba" loop></audio>
@@ -17,7 +17,7 @@
     <audio id="contradiction1" src="audio/contradiction1.weba" loop></audio>
     <audio id="contradiction2" src="audio/contradiction2.weba" loop></audio>
     <audio id="finalpush" src="audio/finalpush.weba" loop></audio>
-
+    <audio id="victory" src="audio/victory.mp3" loop></audio>
     <div id="titlescreen">
         <h1>Ace Historney</h1>
         <h5>Dive into the perspective of a defense attorney handling quite the OLD case...</h5>    
@@ -29,11 +29,10 @@
         <img id="prosecutor" src="media/Prosecutor.gif">
     </div>
     <p id="para1"></p>
-    <video id="tape" height="720" width="1280">
-        <source id="tapesource" src="media/placeholderv.mp4" type="video/mp4">
-        Your browser does not support watching this tape. Lame! But yes, the tape did show the client just walking by the bay, only
+    <p id="tape">
+        The tape shows the client just walking by the bay, only
         looking at the ships with the crates, not ever touching them. However, it lacks a timestamp.
-    </video>
+    </p>
     <img id="visual">
     <p id="para2"></p>
     <p id="para3"></p>
@@ -42,6 +41,11 @@
         <button id="but2" hidden></button>
         <button id="but3" hidden></button>
         <button id="extrabut"></button>
+    </div>
+    <div id="inputSection" hidden>
+    <p id="inputPrompt"></p>
+    <input id="playerInput" type="text" placeholder="Type your answer here">
+    <button id="submitInput">Submit</button>
     </div>
     <div id="objectionWrap">
         <img id="objection" src="media/objection.webp" alt="Objection">
