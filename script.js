@@ -748,7 +748,7 @@ function explainvideo() {
 
 function timestamphold() {
     ignoreClick = true;
-    popup.src = "media/holdit.png";
+    popup.src = "media/Holdit.png";
     stopTrack(testimony1);
     objectionEffect();
     setScene(
@@ -832,7 +832,7 @@ function casefail() {
 function timestampholdsuccess2() {
     playTrack(contradiction1);
     ignoreClick = true;
-    popup.src = "media/holdit.png";
+    popup.src = "media/Holdit.png";
     objectionEffect();
     setScene(
         "'Hold it!'",
@@ -1099,7 +1099,7 @@ function finalPushIntro() {
 
 function finalreasoning() {
     ignoreClick = true;
-    popup.src = "media/holdit.png";
+    popup.src = "media/Holdit.png";
     playTrack(finalpush);
     objectionEffect();
     setScene(
@@ -1171,7 +1171,7 @@ function prosecutorlastrebut() {
 
 function finalanswer() {
     ignoreClick = true;
-    popup.src = "media/holdit.png";
+    popup.src = "media/Holdit.png";
     objectionEffect();
     setScene(
         "'HOLD IT! Despite the assumptions and suspicions, the prosecution has failed to provide any evidence that my client is guilty.'",
